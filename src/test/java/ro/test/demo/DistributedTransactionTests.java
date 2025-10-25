@@ -47,8 +47,8 @@ class DistributedTransactionTests {
     @BeforeEach
     void clean() {
 
-//        jdbc1.update("TRUNCATE TABLE t");
-//        jdbc2.update("TRUNCATE TABLE t");
+        jdbc1.update("TRUNCATE TABLE t");
+        jdbc2.update("TRUNCATE TABLE t");
     }
 
     @Test
@@ -62,7 +62,7 @@ class DistributedTransactionTests {
 
     @Test
     void rollbackWhenFailureOccurs() {
-        assertThrows(RuntimeException.class, () -> service.writeThenFail("B1", "B2"));
+        assertThrows(TestRunTimeException.class, () -> service.writeThenFail("B1", "B2"));
         // After rollback, neither insert should be visible
         Integer c1 = jdbc1.queryForObject("SELECT COUNT(*) FROM t WHERE name=?", Integer.class, "B1");
         Integer c2 = jdbc2.queryForObject("SELECT COUNT(*) FROM t WHERE name=?", Integer.class, "B2");
@@ -71,7 +71,7 @@ class DistributedTransactionTests {
     }
     @Test
     void testWithTempTable(){
-        service.complexOperation("C1", "C2");
+        assertThrows(TestRunTimeException.class, () -> service.complexOperation("C1", "C2"));
         // After rollback, neither insert should be visible
         Integer c1 = jdbc1.queryForObject("SELECT COUNT(*) FROM t WHERE name=?", Integer.class, "C1");
         Integer c2 = jdbc2.queryForObject("SELECT COUNT(*) FROM t WHERE name=?", Integer.class, "C2");

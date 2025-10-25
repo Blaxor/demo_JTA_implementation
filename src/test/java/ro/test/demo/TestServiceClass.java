@@ -34,7 +34,7 @@ public class TestServiceClass {
 
         log.info("Simulating failure after writes");
 
-        throw new RuntimeException("Simulated failure after writes");
+        throw new TestRunTimeException("Simulated failure after writes");
     }
 
     @Transactional
@@ -42,19 +42,20 @@ public class TestServiceClass {
         jdbc1.update("INSERT INTO t(name) VALUES (?)", name1);
         jdbc2.update("INSERT INTO t(name) VALUES (?)", name2);
 
-        jdbc1.update("CREATE TABLE IF NOT EXISTS audit_log ("
+        jdbc1.update("CREATE TEMPORARY TABLE IF NOT EXISTS audit_log ("
                 + "id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, "
                 + "operation VARCHAR(255) NOT NULL, "
                 + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (id)) "
                 + "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-        jdbc2.update("CREATE TABLE IF NOT EXISTS jdbc2testtable ("
+        jdbc2.update("CREATE TEMPORARY TABLE IF NOT EXISTS jdbc2testtable ("
                 + "id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, "
                 + "operation VARCHAR(255) NOT NULL, "
                 + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (id)) "
                 + "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         // Additional complex logic can be added here
+        throw new TestRunTimeException("Simulated failure during complex operation");
     }
 }
