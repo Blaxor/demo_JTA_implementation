@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.testcontainers.containers.MySQLContainer;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
@@ -21,12 +22,13 @@ public class PrimaryDatasourceConfig {
     @Primary
     @Bean(name = "primaryDataSource", initMethod = "init", destroyMethod = "close")
     @ConfigurationProperties(prefix = "primary.datasource")
-    public DataSource primaryDataSource() {
+    public DataSource primaryDataSource(MySQLContainer primaryMySQLContainer) {
         AtomikosDataSourceBean ds = new AtomikosDataSourceBean();
         java.util.Properties xaProps = new java.util.Properties();
         xaProps.setProperty("user", "deiu");
         xaProps.setProperty("password", "password");
-        xaProps.setProperty("URL", "jdbc:mysql://localhost:3306/db1");
+//        xaProps.setProperty("URL", "jdbc:mysql://localhost:3306/db1");
+        xaProps.setProperty("URL", primaryMySQLContainer.getJdbcUrl());
         ds.setXaProperties(xaProps);
         ds.setXaDataSourceClassName("com.mysql.cj.jdbc.MysqlXADataSource");
         return ds;
@@ -36,5 +38,13 @@ public class PrimaryDatasourceConfig {
     @Bean(name = "primaryJdbcTemplate")
     public JdbcTemplate primaryJdbcTemplate(@Qualifier("primaryDataSource") DataSource primaryDataSource) {
         return new JdbcTemplate(primaryDataSource);
+    }
+
+    @Bean(destroyMethod = "stop", initMethod = "start")
+    MySQLContainer<?> primaryMySQLContainer(){
+        return new MySQLContainer("mysql:8.0.33")
+                .withDatabaseName("db1")
+                .withUsername("deiu")
+                .withPassword("password");
     }
 }

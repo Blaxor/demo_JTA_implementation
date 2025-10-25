@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.testcontainers.containers.MySQLContainer;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
@@ -20,12 +21,13 @@ import java.util.HashMap;
 public class SecondDatabaseConfig {
     @Bean(name = "secondaryDataSource", initMethod = "init", destroyMethod = "close")
     @ConfigurationProperties(prefix = "secondary.datasource")
-    public DataSource secondaryDataSource() {
+    public DataSource secondaryDataSource(MySQLContainer secondaryMySQLContainer) {
         AtomikosDataSourceBean ds = new AtomikosDataSourceBean();
         java.util.Properties xaProps = new java.util.Properties();
         xaProps.setProperty("user", "deiu");
         xaProps.setProperty("password", "password");
-        xaProps.setProperty("URL", "jdbc:mysql://localhost:3306/db2");
+        xaProps.setProperty("URL", secondaryMySQLContainer.getJdbcUrl());
+//        xaProps.setProperty("URL", "jdbc:mysql://localhost:3306/db2");
         ds.setXaProperties(xaProps);
         ds.setXaDataSourceClassName("com.mysql.cj.jdbc.MysqlXADataSource");
         return ds;
@@ -34,5 +36,13 @@ public class SecondDatabaseConfig {
     @Bean(name = "secondaryJdbcTemplate")
     public JdbcTemplate secondaryJdbcTemplate(@Qualifier("secondaryDataSource") DataSource secondaryDataSource) {
         return new JdbcTemplate(secondaryDataSource);
+    }
+
+    @Bean(destroyMethod = "stop", initMethod = "start")
+    MySQLContainer<?> secondaryMySQLContainer(){
+        return new MySQLContainer("mysql:8.0.33")
+                .withDatabaseName("db2")
+                .withUsername("deiu")
+                .withPassword("password");
     }
 }

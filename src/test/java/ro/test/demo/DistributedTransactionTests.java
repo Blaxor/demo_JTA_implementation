@@ -69,6 +69,7 @@ class DistributedTransactionTests {
         assertEquals(0, c1);
         assertEquals(0, c2);
     }
+    /// TODO GETTING THE ERROR Caused by: java.sql.SQLException: XA: Temporary tables cannot be accessed inside XA transactions when xa_detach_on_prepare=ON
     @Test
     void testWithTempTable(){
         assertThrows(TestRunTimeException.class, () -> service.complexOperation("C1", "C2"));

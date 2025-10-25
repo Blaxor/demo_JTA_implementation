@@ -38,24 +38,21 @@ public class TestServiceClass {
         throw new TestRunTimeException("Simulated failure after writes");
     }
 
-    @Transactional
     public void complexOperation(String name1, String name2) {
+        // Create temporary tables outside of XA transaction
+
+        createTemporaryTable();
+        // Now start XA transaction for the rest
+        doComplexOperationTransactional(name1, name2);
+
+
+    }
+
+    @Transactional
+    public void doComplexOperationTransactional(String name1, String name2) {
+
         jdbc1.update("INSERT INTO t(name) VALUES (?)", name1);
         jdbc2.update("INSERT INTO t(name) VALUES (?)", name2);
-
-        jdbc1.update("CREATE TEMPORARY TABLE IF NOT EXISTS audit_log ("
-                + "id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, "
-                + "operation VARCHAR(255) NOT NULL, "
-                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                + "PRIMARY KEY (id)) "
-                + "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-        jdbc2.update("CREATE TEMPORARY TABLE IF NOT EXISTS jdbc2testtable ("
-                + "id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, "
-                + "operation VARCHAR(255) NOT NULL, "
-                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                + "PRIMARY KEY (id)) "
-                + "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         // Additional complex logic can be added here
         throw new TestRunTimeException("Simulated failure during complex operation");
     }
@@ -69,6 +66,23 @@ public class TestServiceClass {
         jdbc1.update("INSERT INTO t(name) VALUES (?)", name1);
         log.info("Writing to jdbc 2");
         jdbc2.update("INSERT INTO t(name) VALUES (?)", name2);
+
+    }
+    @Transactional( propagation = Propagation.NOT_SUPPORTED)
+    public void createTemporaryTable(){
+        jdbc1.update("CREATE TEMPORARY TABLE IF NOT EXISTS audit_log ("
+                + "id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, "
+                + "operation VARCHAR(255) NOT NULL, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (id)) "
+                + "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        jdbc2.update("CREATE TEMPORARY TABLE IF NOT EXISTS audit_log ("
+                + "id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, "
+                + "operation VARCHAR(255) NOT NULL, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (id)) "
+                + "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     }
 
