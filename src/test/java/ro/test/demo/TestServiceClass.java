@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -58,4 +59,17 @@ public class TestServiceClass {
         // Additional complex logic can be added here
         throw new TestRunTimeException("Simulated failure during complex operation");
     }
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void lockJdbc2(){
+        jdbc2.update("LOCK TABLES t WRITE");
+    }
+    @Transactional(propagation =  Propagation.REQUIRES_NEW)
+    public void writeLock(String name1, String name2) {
+        log.info("Writing to jdbc 1");
+        jdbc1.update("INSERT INTO t(name) VALUES (?)", name1);
+        log.info("Writing to jdbc 2");
+        jdbc2.update("INSERT INTO t(name) VALUES (?)", name2);
+
+    }
+
 }

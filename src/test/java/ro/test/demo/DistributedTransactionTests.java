@@ -78,4 +78,19 @@ class DistributedTransactionTests {
         assertEquals(0, c1);
         assertEquals(0, c2);
     }
+
+    @Test
+    void testWithWriteLock(){
+        try {
+            service.lockJdbc2();
+            service.writeLock("C1", "C2");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        // After rollback, neither insert should be visible
+        Integer c1 = jdbc1.queryForObject("SELECT COUNT(*) FROM t WHERE name=?", Integer.class, "C1");
+        Integer c2 = jdbc2.queryForObject("SELECT COUNT(*) FROM t WHERE name=?", Integer.class, "C2");
+        assertEquals(0, c1);
+        assertEquals(0, c2);
+    }
 }
